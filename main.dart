@@ -1,16 +1,12 @@
+
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:lottie/lottie.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:pinput/pinput.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'dart:async';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await SharedPreferences.getInstance();
+void main() {
   runApp(const GymTrainerApp());
 }
 
@@ -24,30 +20,12 @@ class GymTrainerApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primaryColor: const Color(0xFF6C63FF),
-        primarySwatch: Colors.deepPurple,
-        fontFamily: GoogleFonts.poppins().fontFamily,
         scaffoldBackgroundColor: Colors.white,
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
           elevation: 0,
           centerTitle: true,
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.grey[50],
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 2),
-          ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
@@ -56,10 +34,6 @@ class GymTrainerApp extends StatelessWidget {
             minimumSize: const Size(double.infinity, 55),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(15),
-            ),
-            textStyle: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
             ),
           ),
         ),
@@ -86,21 +60,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _navigateToNextScreen() async {
     await Future.delayed(const Duration(seconds: 2));
-    
-    final prefs = await SharedPreferences.getInstance();
-    final hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
-    
-    if (!hasSeenOnboarding) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const OnboardingScreen()),
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
-    }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+    );
   }
 
   @override
@@ -117,13 +80,6 @@ class _SplashScreenState extends State<SplashScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
               ),
               child: const Icon(
                 Icons.fitness_center,
@@ -138,7 +94,6 @@ class _SplashScreenState extends State<SplashScreen> {
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
-                letterSpacing: 2,
               ),
             ),
             const SizedBox(height: 10),
@@ -148,10 +103,6 @@ class _SplashScreenState extends State<SplashScreen> {
                 fontSize: 16,
                 color: Colors.white70,
               ),
-            ),
-            const SizedBox(height: 50),
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
             ),
           ],
         ),
@@ -175,7 +126,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<Map<String, dynamic>> _pages = [
     {
       'title': 'Track Your Progress',
-      'description': 'Monitor workouts, track gains with detailed analytics',
+      'description': 'Monitor workouts & track gains with analytics',
       'icon': Icons.trending_up,
       'color': Color(0xFF6C63FF),
     },
@@ -191,22 +142,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       'icon': Icons.person,
       'color': Color(0xFFFF9800),
     },
-    {
-      'title': 'Smart Calculators',
-      'description': 'Plate calculator, 1RM calculator & more',
-      'icon': Icons.calculate,
-      'color': Color(0xFF9C27B0),
-    },
   ];
-
-  Future<void> _completeOnboarding() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('hasSeenOnboarding', true);
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -214,24 +150,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Skip Button
             Align(
               alignment: Alignment.topRight,
-              child: TextButton(
-                onPressed: _completeOnboarding,
-                child: Text(
-                  'Skip',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: _currentPage == _pages.length - 1 
-                        ? Colors.transparent 
-                        : Colors.grey,
-                  ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    );
+                  },
+                  child: const Text('Skip'),
                 ),
               ),
             ),
 
-            // Page View
             Expanded(
               child: PageView.builder(
                 controller: _controller,
@@ -240,12 +174,51 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   setState(() => _currentPage = index);
                 },
                 itemBuilder: (context, index) {
-                  return OnboardingPageWidget(page: _pages[index]);
+                  return Padding(
+                    padding: const EdgeInsets.all(30),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          height: 200,
+                          margin: const EdgeInsets.only(bottom: 40),
+                          decoration: BoxDecoration(
+                            color: _pages[index]['color'].withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Center(
+                            child: Icon(
+                              _pages[index]['icon'],
+                              size: 100,
+                              color: _pages[index]['color'],
+                            ),
+                          ),
+                        ),
+                        Text(
+                          _pages[index]['title'],
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: _pages[index]['color'],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          _pages[index]['description'],
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  );
                 },
               ),
             ),
 
-            // Page Indicator
             SmoothPageIndicator(
               controller: _controller,
               count: _pages.length,
@@ -257,32 +230,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
 
-            // Navigation Buttons
             Padding(
               padding: const EdgeInsets.all(30),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Back Button
                   if (_currentPage > 0)
                     TextButton(
                       onPressed: () => _controller.previousPage(
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
                       ),
-                      child: const Text(
-                        'Back',
-                        style: TextStyle(fontSize: 16),
-                      ),
+                      child: const Text('Back'),
                     )
                   else
                     const SizedBox(width: 80),
 
-                  // Next/Get Started Button
                   ElevatedButton(
                     onPressed: () {
                       if (_currentPage == _pages.length - 1) {
-                        _completeOnboarding();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        );
                       } else {
                         _controller.nextPage(
                           duration: const Duration(milliseconds: 300),
@@ -299,7 +269,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     child: Text(
                       _currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
-                      style: const TextStyle(fontSize: 16, color: Colors.white),
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ),
                 ],
@@ -307,64 +277,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class OnboardingPageWidget extends StatelessWidget {
-  final Map<String, dynamic> page;
-
-  const OnboardingPageWidget({Key? key, required this.page}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(30),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Animated Icon Container
-          Container(
-            height: 250,
-            margin: const EdgeInsets.only(bottom: 40),
-            decoration: BoxDecoration(
-              color: page['color'].withOpacity(0.1),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: Center(
-              child: Icon(
-                page['icon'],
-                size: 120,
-                color: page['color'],
-              ),
-            ),
-          ),
-
-          // Title
-          Text(
-            page['title'],
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: page['color'],
-            ),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 20),
-
-          // Description
-          Text(
-            page['description'],
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-              height: 1.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
       ),
     );
   }
@@ -379,51 +291,21 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _rememberMe = true;
   bool _isLoading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadSavedCredentials();
-  }
-
-  Future<void> _loadSavedCredentials() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedEmail = prefs.getString('saved_email');
-    final savedPassword = prefs.getString('saved_password');
-    
-    if (savedEmail != null && savedPassword != null) {
-      _emailController.text = savedEmail;
-      _passwordController.text = savedPassword;
-      setState(() => _rememberMe = true);
-    }
-  }
-
   Future<void> _login() async {
-    if (_formKey.currentState!.validate()) {
+    if (_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
       setState(() => _isLoading = true);
-      
-      // Simulate API call
       await Future.delayed(const Duration(seconds: 2));
-      
-      if (_rememberMe) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('saved_email', _emailController.text);
-        await prefs.setString('saved_password', _passwordController.text);
-        await prefs.setBool('isLoggedIn', true);
-      }
-      
       setState(() => _isLoading = false);
       
-      // Navigate to home
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     }
   }
@@ -434,248 +316,196 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SingleChildScrollView(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                const SizedBox(height: 80),
-                
-                // Logo and Title
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF6C63FF),
-                    borderRadius: BorderRadius.circular(25),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF6C63FF).withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
+          child: Column(
+            children: [
+              const SizedBox(height: 80),
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6C63FF),
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: const Icon(
+                  Icons.fitness_center,
+                  size: 50,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Welcome Back',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Sign in to continue your fitness journey',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 40),
+
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  hintText: 'Email Address',
+                  prefixIcon: const Icon(Icons.email),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
+
+              TextField(
+                controller: _passwordController,
+                obscureText: !_isPasswordVisible,
+                decoration: InputDecoration(
+                  hintText: 'Password',
+                  prefixIcon: const Icon(Icons.lock),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() => _isPasswordVisible = !_isPasswordVisible);
+                    },
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: _rememberMe,
+                        onChanged: (value) {
+                          setState(() => _rememberMe = value!);
+                        },
                       ),
+                      const Text('Remember me'),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.fitness_center,
-                    size: 50,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Welcome Back',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Sign in to continue your fitness journey',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // Email Field
-                TextFormField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    hintText: 'Email Address',
-                    prefixIcon: const Icon(Icons.email, color: Colors.grey),
-                    filled: true,
-                    fillColor: Colors.grey[50],
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                      return 'Please enter a valid email';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 15),
-
-                // Password Field
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: !_isPasswordVisible,
-                  decoration: InputDecoration(
-                    hintText: 'Password',
-                    prefixIcon: const Icon(Icons.lock, color: Colors.grey),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                        color: Colors.grey,
-                      ),
-                      onPressed: () {
-                        setState(() => _isPasswordVisible = !_isPasswordVisible);
-                      },
+                  TextButton(
+                    onPressed: () {},
+                    child: const Text(
+                      'Forgot Password?',
+                      style: TextStyle(color: Color(0xFF6C63FF)),
                     ),
-                    filled: true,
-                    fillColor: Colors.grey[50],
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 10),
+                ],
+              ),
+              const SizedBox(height: 20),
 
-                // Remember Me & Forgot Password
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: _rememberMe,
-                          onChanged: (value) {
-                            setState(() => _rememberMe = value!);
-                          },
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _login,
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(Colors.white),
                         ),
-                        const Text('Remember me'),
-                      ],
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        // Navigate to forgot password
-                      },
-                      child: const Text(
-                        'Forgot Password?',
-                        style: TextStyle(color: Color(0xFF6C63FF)),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
+                      )
+                    : const Text('Sign In'),
+              ),
+              const SizedBox(height: 20),
 
-                // Sign In Button
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _login,
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation(Colors.white),
-                          ),
-                        )
-                      : const Text('Sign In'),
-                ),
-                const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(child: Divider(color: Colors.grey[300])),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 15),
+                    child: Text('Or continue with'),
+                  ),
+                  Expanded(child: Divider(color: Colors.grey[300])),
+                ],
+              ),
+              const SizedBox(height: 20),
 
-                // Divider
-                Row(
-                  children: [
-                    Expanded(child: Divider(color: Colors.grey[300])),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: Text(
-                        'Or continue with',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SignInButton(
+                    Buttons.Google,
+                    text: 'Google',
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const HomeScreen()),
+                      );
+                    },
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    Expanded(child: Divider(color: Colors.grey[300])),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                // Social Login Buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Google Sign In
-                    SignInButton(
-                      Buttons.Google,
-                      text: 'Google',
-                      onPressed: () {
-                        // Google sign in implementation
-                      },
+                  ),
+                  const SizedBox(width: 15),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const PhoneAuthScreen()),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      side: BorderSide(color: Colors.grey[300]!),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     ),
-                    const SizedBox(width: 15),
-                    
-                    // Phone Sign In
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const PhoneAuthScreen()),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
-                        side: BorderSide(color: Colors.grey[300]!),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.phone, color: Colors.green),
-                          SizedBox(width: 8),
-                          Text('Phone'),
-                        ],
-                      ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.phone, color: Colors.green),
+                        SizedBox(width: 8),
+                        Text('Phone'),
+                      ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 30),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 30),
 
-                // Sign Up Link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Don't have an account? "),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const SignupScreen()),
-                        );
-                      },
-                      child: const Text(
-                        'Sign Up',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF6C63FF),
-                        ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text("Don't have an account? "),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SignupScreen()),
+                      );
+                    },
+                    child: const Text(
+                      'Sign Up',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF6C63FF),
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 30),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
   }
 }
 
@@ -688,27 +518,19 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
   bool _isPasswordVisible = false;
-  bool _isConfirmPasswordVisible = false;
   bool _acceptTerms = false;
-  bool _isLoading = false;
 
   Future<void> _signUp() async {
-    if (_formKey.currentState!.validate() && _acceptTerms) {
-      setState(() => _isLoading = true);
+    if (_fullNameController.text.isNotEmpty &&
+        _emailController.text.isNotEmpty &&
+        _passwordController.text.isNotEmpty &&
+        _acceptTerms) {
       
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-      
-      setState(() => _isLoading = false);
-      
-      // Navigate to OTP verification
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -733,257 +555,113 @@ class _SignupScreenState extends State<SignupScreen> {
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 10),
-                const Text(
-                  'Create Account',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 10),
+              const Text(
+                'Create Account',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
                 ),
-                const SizedBox(height: 5),
-                const Text(
-                  'Start your fitness journey today',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
+              ),
+              const SizedBox(height: 5),
+              const Text(
+                'Start your fitness journey today',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
                 ),
-                const SizedBox(height: 30),
+              ),
+              const SizedBox(height: 30),
 
-                // Full Name
-                TextFormField(
-                  controller: _fullNameController,
-                  decoration: const InputDecoration(
-                    hintText: 'Full Name',
-                    prefixIcon: Icon(Icons.person, color: Colors.grey),
-                    filled: true,
-                    fillColor: Colors.grey[50],
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your full name';
-                    }
-                    return null;
-                  },
+              TextField(
+                controller: _fullNameController,
+                decoration: const InputDecoration(
+                  hintText: 'Full Name',
+                  prefixIcon: Icon(Icons.person),
+                  border: OutlineInputBorder(),
                 ),
-                const SizedBox(height: 15),
+              ),
+              const SizedBox(height: 15),
 
-                // Email
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    hintText: 'Email Address',
-                    prefixIcon: Icon(Icons.email, color: Colors.grey),
-                    filled: true,
-                    fillColor: Colors.grey[50],
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                      return 'Please enter a valid email';
-                    }
-                    return null;
-                  },
+              TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  hintText: 'Email Address',
+                  prefixIcon: Icon(Icons.email),
+                  border: OutlineInputBorder(),
                 ),
-                const SizedBox(height: 15),
+              ),
+              const SizedBox(height: 15),
 
-                // Phone Number
-                TextFormField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(
-                    hintText: 'Phone Number',
-                    prefixIcon: Icon(Icons.phone, color: Colors.grey),
-                    filled: true,
-                    fillColor: Colors.grey[50],
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your phone number';
-                    }
-                    if (value.length < 10) {
-                      return 'Please enter a valid phone number';
-                    }
-                    return null;
-                  },
+              TextField(
+                controller: _phoneController,
+                decoration: const InputDecoration(
+                  hintText: 'Phone Number',
+                  prefixIcon: Icon(Icons.phone),
+                  border: OutlineInputBorder(),
                 ),
-                const SizedBox(height: 15),
+              ),
+              const SizedBox(height: 15),
 
-                // Password
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: !_isPasswordVisible,
-                  decoration: InputDecoration(
-                    hintText: 'Password',
-                    prefixIcon: const Icon(Icons.lock, color: Colors.grey),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                        color: Colors.grey,
-                      ),
-                      onPressed: () {
-                        setState(() => _isPasswordVisible = !_isPasswordVisible);
-                      },
+              TextField(
+                controller: _passwordController,
+                obscureText: !_isPasswordVisible,
+                decoration: InputDecoration(
+                  hintText: 'Password',
+                  prefixIcon: const Icon(Icons.lock),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
                     ),
-                    filled: true,
-                    fillColor: Colors.grey[50],
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a password';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 15),
-
-                // Confirm Password
-                TextFormField(
-                  controller: _confirmPasswordController,
-                  obscureText: !_isConfirmPasswordVisible,
-                  decoration: InputDecoration(
-                    hintText: 'Confirm Password',
-                    prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                        color: Colors.grey,
-                      ),
-                      onPressed: () {
-                        setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible);
-                      },
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[50],
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please confirm your password';
-                    }
-                    if (value != _passwordController.text) {
-                      return 'Passwords do not match';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-
-                // Terms and Conditions
-                Row(
-                  children: [
-                    Checkbox(
-                      value: _acceptTerms,
-                      onChanged: (value) {
-                        setState(() => _acceptTerms = value!);
-                      },
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    Expanded(
-                      child: Wrap(
-                        children: [
-                          const Text('I agree to the '),
-                          GestureDetector(
-                            onTap: () {
-                              // Show terms dialog
-                            },
-                            child: const Text(
-                              'Terms & Conditions',
-                              style: TextStyle(
-                                color: Color(0xFF6C63FF),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const Text(' and '),
-                          GestureDetector(
-                            onTap: () {
-                              // Show privacy policy
-                            },
-                            child: const Text(
-                              'Privacy Policy',
-                              style: TextStyle(
-                                color: Color(0xFF6C63FF),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 25),
-
-                // Sign Up Button
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _signUp,
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation(Colors.white),
-                          ),
-                        )
-                      : const Text('Create Account'),
-                ),
-                const SizedBox(height: 20),
-
-                // Already have account
-                Center(
-                  child: TextButton(
                     onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const LoginScreen()),
-                      );
+                      setState(() => _isPasswordVisible = !_isPasswordVisible);
                     },
-                    child: RichText(
-                      text: const TextSpan(
-                        text: 'Already have an account? ',
-                        style: TextStyle(color: Colors.grey),
-                        children: [
-                          TextSpan(
-                            text: 'Sign In',
-                            style: TextStyle(
-                              color: Color(0xFF6C63FF),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
+                  border: const OutlineInputBorder(),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 20),
+
+              Row(
+                children: [
+                  Checkbox(
+                    value: _acceptTerms,
+                    onChanged: (value) {
+                      setState(() => _acceptTerms = value!);
+                    },
+                  ),
+                  const Expanded(
+                    child: Text('I agree to Terms & Conditions and Privacy Policy'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 25),
+
+              ElevatedButton(
+                onPressed: _signUp,
+                child: const Text('Create Account'),
+              ),
+              const SizedBox(height: 20),
+
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    );
+                  },
+                  child: const Text('Already have an account? Sign In'),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _fullNameController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
   }
 }
 
@@ -997,27 +675,6 @@ class PhoneAuthScreen extends StatefulWidget {
 
 class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   final TextEditingController _phoneController = TextEditingController();
-  bool _isLoading = false;
-
-  Future<void> _sendOTP() async {
-    if (_phoneController.text.length >= 10) {
-      setState(() => _isLoading = true);
-      
-      await Future.delayed(const Duration(seconds: 2));
-      
-      setState(() => _isLoading = false);
-      
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => OTPScreen(
-            email: '',
-            phone: _phoneController.text,
-          ),
-        ),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -1052,111 +709,35 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               ),
               const SizedBox(height: 40),
 
-              // Phone Input
               IntlPhoneField(
                 controller: _phoneController,
                 initialCountryCode: 'IN',
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Phone Number',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[50],
-                ),
-                onChanged: (phone) {
-                  print(phone.completeNumber);
-                },
-              ),
-              const SizedBox(height: 20),
-
-              // Terms Info
-              Container(
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.info, color: Colors.blue, size: 20),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'We will send an SMS with a verification code. Message and data rates may apply.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.blue,
-                        ),
-                      ),
-                    ),
-                  ],
+                  border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 40),
 
-              // Continue Button
               ElevatedButton(
-                onPressed: _isLoading ? null : _sendOTP,
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(Colors.white),
-                        ),
-                      )
-                    : const Text('Continue'),
-              ),
-              const SizedBox(height: 20),
-
-              // Alternative Options
-              Center(
-                child: Column(
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const LoginScreen()),
-                        );
-                      },
-                      child: const Text('Use email instead'),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'or',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    const SizedBox(height: 10),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        // Google sign in
-                      },
-                      icon: const Icon(Icons.g_translate),
-                      label: const Text('Continue with Google'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
-                        side: BorderSide(color: Colors.grey[300]!),
-                        minimumSize: const Size(double.infinity, 50),
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OTPScreen(
+                        email: '',
+                        phone: _phoneController.text,
                       ),
                     ),
-                  ],
-                ),
+                  );
+                },
+                child: const Text('Continue'),
               ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _phoneController.dispose();
-    super.dispose();
   }
 }
 
@@ -1175,8 +756,6 @@ class _OTPScreenState extends State<OTPScreen> {
   final TextEditingController _otpController = TextEditingController();
   int _timer = 60;
   late Timer _countdownTimer;
-  bool _canResend = false;
-  bool _isLoading = false;
 
   @override
   void initState() {
@@ -1189,64 +768,13 @@ class _OTPScreenState extends State<OTPScreen> {
       if (_timer > 0) {
         setState(() => _timer--);
       } else {
-        setState(() => _canResend = true);
         timer.cancel();
       }
     });
   }
 
-  Future<void> _verifyOTP() async {
-    if (_otpController.text.length == 6) {
-      setState(() => _isLoading = true);
-      
-      await Future.delayed(const Duration(seconds: 2));
-      
-      setState(() => _isLoading = false);
-      
-      // Navigate to subscription screen
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const SubscriptionScreen(),
-        ),
-      );
-    }
-  }
-
-  Future<void> _resendOTP() async {
-    if (!_canResend) return;
-
-    setState(() {
-      _timer = 60;
-      _canResend = false;
-    });
-
-    _startTimer();
-    
-    // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('OTP sent successfully!'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    const defaultPinTheme = PinTheme(
-      width: 56,
-      height: 56,
-      textStyle: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.grey,
-        borderRadius: BorderRadius.circular(10),
-      ),
-    );
-
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -1269,105 +797,42 @@ class _OTPScreenState extends State<OTPScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              const Text(
-                'We have sent a verification code to',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 5),
               Text(
                 widget.email.isNotEmpty ? widget.email : widget.phone,
                 style: const TextStyle(
                   fontSize: 16,
                   color: Colors.blue,
-                  fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 40),
 
-              // OTP Input
               Center(
                 child: Pinput(
                   length: 6,
                   controller: _otpController,
-                  defaultPinTheme: defaultPinTheme,
-                  focusedPinTheme: defaultPinTheme.copyWith(
-                    decoration: defaultPinTheme.decoration!.copyWith(
-                      border: Border.all(color: const Color(0xFF6C63FF)),
-                      color: Colors.white,
-                    ),
-                  ),
-                  submittedPinTheme: defaultPinTheme.copyWith(
-                    decoration: defaultPinTheme.decoration!.copyWith(
-                      color: const Color(0xFF6C63FF).withOpacity(0.1),
-                    ),
-                  ),
-                  showCursor: true,
-                  onCompleted: (pin) => _verifyOTP(),
                 ),
               ),
               const SizedBox(height: 30),
 
-              // Timer
               Center(
                 child: Text(
                   'Resend code in $_timer seconds',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 16,
-                    color: _timer > 0 ? Colors.grey : Colors.green,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Resend Button
-              Center(
-                child: TextButton(
-                  onPressed: _canResend ? _resendOTP : null,
-                  child: Text(
-                    'Resend OTP',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: _canResend 
-                          ? const Color(0xFF6C63FF) 
-                          : Colors.grey,
-                    ),
+                    color: Colors.grey,
                   ),
                 ),
               ),
               const SizedBox(height: 30),
 
-              // Verify Button
               ElevatedButton(
-                onPressed: _isLoading ? null : _verifyOTP,
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(Colors.white),
-                        ),
-                      )
-                    : const Text('Verify & Continue'),
-              ),
-              const SizedBox(height: 20),
-
-              // Change Phone/Email
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    'Use different email or phone',
-                    style: TextStyle(
-                      color: Color(0xFF6C63FF),
-                    ),
-                  ),
-                ),
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SubscriptionScreen()),
+                  );
+                },
+                child: const Text('Verify & Continue'),
               ),
             ],
           ),
@@ -1378,7 +843,6 @@ class _OTPScreenState extends State<OTPScreen> {
 
   @override
   void dispose() {
-    _otpController.dispose();
     _countdownTimer.cancel();
     super.dispose();
   }
@@ -1395,90 +859,41 @@ class SubscriptionScreen extends StatefulWidget {
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
   int _selectedPlanIndex = 1;
 
-  final List<Map<String, dynamic>> _plans = [
-    {
-      'id': 'basic_monthly',
-      'name': 'Basic Monthly',
-      'description': 'Perfect for beginners',
-      'price': 299,
-      'duration': 'month',
-      'features': [
-        'Access to all exercises',
-        'Basic workout plans',
-        'Progress tracking',
-        'Email support',
-      ],
-      'color': Colors.blue,
-    },
-    {
-      'id': 'pro_monthly',
-      'name': 'Pro Monthly',
-      'description': 'For serious trainers',
-      'price': 599,
-      'duration': 'month',
-      'features': [
-        'Everything in Basic',
-        'Advanced workout plans',
-        'Personalized recommendations',
-        'Priority support',
-        'Offline access',
-      ],
-      'color': Colors.green,
-    },
-    {
-      'id': 'pro_annual',
-      'name': 'Pro Annual',
-      'description': 'Best value - Save 40%',
-      'price': 3599,
-      'duration': 'year',
-      'features': [
-        'Everything in Pro Monthly',
-        '2 months free',
-        'Exclusive content',
-        'Early access to new features',
-      ],
-      'color': Colors.purple,
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Upgrade Plan'),
-        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // Header
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.blue[50],
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: Column(
+              child: const Column(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.workspace_premium,
                     size: 50,
                     color: Colors.amber,
                   ),
-                  const SizedBox(height: 10),
-                  const Text(
+                  SizedBox(height: 10),
+                  Text(
                     'Unlock Premium Features',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Get personalized workout plans, advanced analytics, and much more',
+                  SizedBox(height: 10),
+                  Text(
+                    'Get personalized workout plans, advanced analytics, and more',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey),
                   ),
                 ],
               ),
@@ -1486,219 +901,147 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             const SizedBox(height: 30),
 
             // Plan Cards
-            ..._plans.asMap().entries.map((entry) {
-              final index = entry.key;
-              final plan = entry.value;
-              final isSelected = index == _selectedPlanIndex;
+            _buildPlanCard(
+              title: 'Basic Monthly',
+              price: '₹299',
+              period: '/month',
+              features: ['All exercises', 'Basic plans', 'Progress tracking'],
+              isSelected: _selectedPlanIndex == 0,
+              onTap: () => setState(() => _selectedPlanIndex = 0),
+            ),
+            const SizedBox(height: 15),
 
-              return GestureDetector(
-                onTap: () {
-                  setState(() => _selectedPlanIndex = index);
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.only(bottom: 15),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: isSelected ? plan['color'] : Colors.white,
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(
-                      color: isSelected
-                          ? plan['color']
-                          : Colors.grey[300]!,
-                      width: isSelected ? 2 : 1,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Popular Badge
-                      if (plan['id'] == 'pro_annual')
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: Colors.amber,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Text(
-                            'MOST POPULAR',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: 10),
+            _buildPlanCard(
+              title: 'Pro Monthly',
+              price: '₹599',
+              period: '/month',
+              features: ['Everything in Basic', 'Advanced plans', 'Priority support'],
+              isSelected: _selectedPlanIndex == 1,
+              onTap: () => setState(() => _selectedPlanIndex = 1),
+              isPopular: true,
+            ),
+            const SizedBox(height: 15),
 
-                      // Plan Name
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            plan['name'],
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: isSelected
-                                  ? Colors.white
-                                  : Colors.black,
-                            ),
-                          ),
-                          if (plan['id'] == 'pro_annual')
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: Colors.green,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Text(
-                                'SAVE 40%',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 5),
-
-                      // Description
-                      Text(
-                        plan['description'],
-                        style: TextStyle(
-                          color: isSelected
-                              ? Colors.white70
-                              : Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Price
-                      Row(
-                        children: [
-                          Text(
-                            '₹${plan['price']}',
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: isSelected
-                                  ? Colors.white
-                                  : Colors.black,
-                            ),
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            '/${plan['duration']}',
-                            style: TextStyle(
-                              color: isSelected
-                                  ? Colors.white70
-                                  : Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Features
-                      ...(plan['features'] as List<String>).map((feature) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.check_circle,
-                                  color: isSelected
-                                      ? Colors.white
-                                      : Colors.green,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    feature,
-                                    style: TextStyle(
-                                      color: isSelected
-                                          ? Colors.white
-                                          : Colors.black,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )),
-                    ],
-                  ),
-                ),
-              );
-            }),
-
+            _buildPlanCard(
+              title: 'Pro Annual',
+              price: '₹3599',
+              period: '/year',
+              features: ['Everything in Pro', '2 months free', 'Exclusive content'],
+              isSelected: _selectedPlanIndex == 2,
+              onTap: () => setState(() => _selectedPlanIndex = 2),
+            ),
             const SizedBox(height: 30),
 
-            // Continue Button
             ElevatedButton(
               onPressed: () {
-                // Process payment
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => const HomePage()),
+                  MaterialPageRoute(builder: (context) => const HomeScreen()),
                 );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
                 minimumSize: const Size(double.infinity, 55),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
+              ),
+              child: const Text('Continue with Selected Plan'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlanCard({
+    required String title,
+    required String price,
+    required String period,
+    required List<String> features,
+    required bool isSelected,
+    required VoidCallback onTap,
+    bool isPopular = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF6C63FF) : Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF6C63FF) : Colors.grey[300]!,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (isPopular)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.amber,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text(
+                  'MOST POPULAR',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-              child: Text(
-                'Continue with ${_plans[_selectedPlanIndex]['name']}',
-                style: const TextStyle(fontSize: 16),
+            if (isPopular) const SizedBox(height: 10),
+            
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isSelected ? Colors.white : Colors.black,
               ),
             ),
-
-            const SizedBox(height: 20),
-
-            // Free Trial
-            TextButton(
-              onPressed: () {
-                // Start free trial
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HomePage()),
-                );
-              },
-              child: const Text(
-                'Start 7-day free trial',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.blue,
+            const SizedBox(height: 10),
+            
+            Row(
+              children: [
+                Text(
+                  price,
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected ? Colors.white : Colors.black,
+                  ),
                 ),
-              ),
-            ),
-
-            // Terms
-            const Padding(
-              padding: EdgeInsets.only(top: 20, bottom: 10),
-              child: Text(
-                'By continuing, you agree to our Terms of Service and Privacy Policy',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
+                const SizedBox(width: 5),
+                Text(
+                  period,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white70 : Colors.grey,
+                  ),
                 ),
-              ),
+              ],
             ),
+            const SizedBox(height: 15),
+            
+            ...features.map((feature) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    color: isSelected ? Colors.white : Colors.green,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    feature,
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black,
+                    ),
+                  ),
+                ],
+              ),
+            )),
           ],
         ),
       ),
@@ -1706,23 +1049,16 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 }
 
-// ==================== HOME PAGE ====================
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+// ==================== HOME SCREEN ====================
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-
-  final List<Widget> _pages = [
-    const HomeTab(),
-    const WorkoutsTab(),
-    const ProgressTab(),
-    const ProfileTab(),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -1734,19 +1070,18 @@ class _HomePageState extends State<HomePage> {
             icon: const Icon(Icons.notifications),
             onPressed: () {},
           ),
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {},
-          ),
         ],
       ),
-      body: _pages[_selectedIndex],
+      body: _selectedIndex == 0
+          ? _buildHomeTab()
+          : _selectedIndex == 1
+              ? _buildWorkoutsTab()
+              : _selectedIndex == 2
+                  ? _buildProgressTab()
+                  : _buildProfileTab(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF6C63FF),
-        unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -1768,26 +1103,18 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-}
 
-class HomeTab extends StatelessWidget {
-  const HomeTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildHomeTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Welcome Card
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFF6C63FF), Color(0xFF8A85FF)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(20),
             ),
@@ -1803,18 +1130,18 @@ class HomeTab extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 15),
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Welcome back,',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.white70,
                         ),
                       ),
-                      const Text(
+                      Text(
                         'John Doe',
                         style: TextStyle(
                           fontSize: 22,
@@ -1822,23 +1149,23 @@ class HomeTab extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 5),
-                      Text(
-                        'Day 7 of your fitness journey',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white.withOpacity(0.8),
-                        ),
-                      ),
                     ],
                   ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.logout, color: Colors.white),
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    );
+                  },
                 ),
               ],
             ),
           ),
           const SizedBox(height: 20),
 
-          // Quick Stats
           const Text(
             'Quick Stats',
             style: TextStyle(
@@ -1853,7 +1180,6 @@ class HomeTab extends StatelessWidget {
             crossAxisCount: 2,
             crossAxisSpacing: 15,
             mainAxisSpacing: 15,
-            childAspectRatio: 1.5,
             children: [
               _buildStatCard('Workouts', '12', Icons.fitness_center, Colors.blue),
               _buildStatCard('Calories', '1.2k', Icons.local_fire_department, Colors.orange),
@@ -1863,7 +1189,6 @@ class HomeTab extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          // Today's Workout
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -1881,13 +1206,7 @@ class HomeTab extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text(
-                  'Chest & Triceps',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
-                ),
+                const Text('Chest & Triceps'),
                 const SizedBox(height: 15),
                 ElevatedButton(
                   onPressed: () {},
@@ -1910,7 +1229,6 @@ class HomeTab extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: color),
           const SizedBox(height: 10),
@@ -1930,45 +1248,88 @@ class HomeTab extends StatelessWidget {
       ),
     );
   }
-}
 
-class WorkoutsTab extends StatelessWidget {
-  const WorkoutsTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        'Workouts Screen',
-        style: TextStyle(fontSize: 24),
+  Widget _buildWorkoutsTab() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.fitness_center,
+            size: 100,
+            color: Colors.grey,
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Workout Library',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          const Text('Browse 500+ exercises'),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {},
+            child: const Text('Start New Workout'),
+          ),
+        ],
       ),
     );
   }
-}
 
-class ProgressTab extends StatelessWidget {
-  const ProgressTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        'Progress Screen',
-        style: TextStyle(fontSize: 24),
+  Widget _buildProgressTab() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.trending_up,
+            size: 100,
+            color: Colors.green,
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Progress Tracking',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          const Text('View your fitness journey'),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {},
+            child: const Text('View Analytics'),
+          ),
+        ],
       ),
     );
   }
-}
 
-class ProfileTab extends StatelessWidget {
-  const ProfileTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text(
-        'Profile Screen',
-        style: TextStyle(fontSize: 24),
+  Widget _buildProfileTab() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircleAvatar(
+            radius: 50,
+            child: Icon(Icons.person, size: 50),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'John Doe',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          const Text('Premium Member'),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+              );
+            },
+            child: const Text('Logout'),
+          ),
+        ],
       ),
     );
   }
